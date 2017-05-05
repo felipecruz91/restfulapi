@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"net/http"
 
@@ -22,6 +23,12 @@ type Address struct {
 }
 
 var people []Person
+
+func HealthCheckEndpoint(w http.ResponseWriter, req *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	io.WriteString(w, `{"alive": true}`)
+}
 
 func GetPersonEndpoint(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
@@ -73,6 +80,7 @@ func main() {
 	router := mux.NewRouter()
 	people = append(people, Person{ID: "1", Firstname: "Michael", Lastname: "Scofield", Address: &Address{City: "Dublin", State: "California"}})
 	people = append(people, Person{ID: "2", Firstname: "John", Lastname: "Abruzzi"})
+	router.HandleFunc("/healthcheck", HealthCheckEndpoint).Methods("GET")
 	router.HandleFunc("/people", GetPeopleEndpoint).Methods("GET")
 	router.HandleFunc("/people/{id}", GetPersonEndpoint).Methods("GET")
 	router.HandleFunc("/people/{id}", CreatePersonEndpoint).Methods("POST")
